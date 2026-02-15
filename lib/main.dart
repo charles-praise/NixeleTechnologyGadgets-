@@ -1,23 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart'; // Flutter extensions + path helpers
+import 'package:hive_flutter/hive_flutter.dart';
 
-import 'models/task.dart'; // data model + generated adapter
-import 'screens/home_screen.dart'; // home screen
+import 'core/hive_boxes.dart';
+import 'models/affiliate.dart';
+import 'models/capital.dart';
+import 'models/debtors.dart';
+import 'models/debts.dart';
+import 'models/purchase.dart';
+import 'screen/home_screen.dart';
 
-void main() async {
-  // Ensures Flutter engine is ready before using platform channels / async init
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initializes Hive with app documents directory (creates .hive files there)
+  // 1. initialize Hive (create folders in app documents)
   await Hive.initFlutter();
 
-  // Registers the generated adapter so Hive knows how to serialize/deserialize Task
-  Hive.registerAdapter(TaskAdapter());
+  // 2. run this command """  flutter pub run build_runner build --delete-conflicting-outputs """
+  // to auto-generate the adapters after writing creating your models
+  Hive.registerAdapter(AffilliateItemsAdapter());
+  Hive.registerAdapter(CapitalAdapter());
+  Hive.registerAdapter(DebtorsAdapter());
+  Hive.registerAdapter(DebtsAdapter());
+  Hive.registerAdapter(PurchaseAdapter());
 
-  // Opens (or creates) a box named 'tasks' that stores Task objects
-  // This is asynchronous — must await before reading/writing
-  await Hive.openBox<Task>('tasks');
+  // 3. open all boxes you plan to use.
+  await Future.wait([
+    Hive.openBox(HiveBoxes.affiliateItems),
+    Hive.openBox(HiveBoxes.capital),
+    Hive.openBox(HiveBoxes.debtors),
+    Hive.openBox(HiveBoxes.purchase),
+    Hive.openBox(HiveBoxes.debts),
+  ]);
 
+  // 4. run the application
   runApp(const MyApp());
 }
 
@@ -27,9 +42,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'NixGadgets',
-      theme: ThemeData(primarySwatch: Colors.indigo),
-      home: const HomeScreen(),
+      title: "NixGadgets",
+      theme: ThemeData(),
+      themeMode: ThemeMode.system,
+      home: HomeScreen(),
     );
   }
 }
